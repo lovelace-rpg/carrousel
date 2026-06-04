@@ -1,0 +1,419 @@
+(function () {
+
+  /* =========================
+     CONFIG
+  ========================= */
+
+  const CONFIG = {
+    postSelector: ".post",
+    contentSelector: ".postbody"
+  };
+
+  /* =========================
+     DATA
+  ========================= */
+
+  const randomEvents = [
+    { text: "Succès critique", chance: 5 },
+    { text: "Succès", chance: 45 },
+    { text: "Résultat neutre", chance: 30 },
+    { text: "Échec", chance: 15 },
+    { text: "Échec critique", chance: 5 }
+  ];
+
+  const sacrificeDonOptions = [
+    { text: "Vous perdez votre mise.", chance: 20 },
+    { text: "Vous perdez votre mise et un slot.", chance: 15 },
+    { text: "Vous perdez votre mise et deux slots.", chance: 2 },
+    { text: "Vous conservez votre mise.", chance: 20 },
+    { text: "Vous gagnez un don unique.", chance: 20 },
+    { text: "Vous gagnez un slot", chance: 10 },
+    { text: "Vous gagnez deux slots.", chance: 5 }, 
+ { text: "Vous gagnez un don de niveau 4.", chance: 2 }, 
+ { text: "Vous gagnez deux dons uniques.", chance: 6 } 
+  ];
+
+  const sacrificePointsOptions = [
+    { text: "Vous gagnez 3 points.", chance: 5 },
+    { text: "Vous gagnez 2 points.", chance: 10 },
+    { text: "Vous gagnez 1 point.", chance: 20 },
+    { text: "Vous perdez 1 point.", chance: 10 },
+    { text: "Vous perdez 2 points.", chance: 10 },
+    { text: "Rien ne se passe mais vous conservez votre mise.", chance: 40 }
+  ];
+
+  const maledictionsTranches = [
+    {
+      min: 0,
+      max: 99,
+      options: [
+  { text: "<h10>RAIPONSE :</h10> vos cheveux se mettent à pousser d'un centimètre par heure, vous vous retrouvez bientôt avec une tignasse d'une longueur improbable. C'est l'occasion de vous découvrir avec une nouvelle tête, d'investir dans de bons ciseaux ou de renouer des liens avec votre coiffeur perdu de vue. ", chance: 30 },
+        { text: "<h10>TROU NOIR :</h10> vous héritez d'un vieux sac à main, une besace, ce qui vous fait rêver, chiné dans une friperie obscure. Tout allait bien jusqu'à ce que vous vous rendiez compte que votre nouvelle acquisition engloutit littéralement tout ce que vous avez pu y ranger. Vos papiers, vos possessions les plus précieuses ? Envolés.", chance: 30 },
+{ text: "<h10>THE SOUND OF SILENCE :</h10> en fonction des évènements / de vos émotions, la musique autour de vous s'adapte, comme la bande originale de votre vie qui défile dans le background. Plus la peine de lutter et de tenter de dire que non, vous n'êtes pas une drama queen — votre bande-son est suffisamment parlante.", chance: 10 },
+{ text: "<h10>L'AVARE :</h10> du jour au lendemain, votre compte en banque affiche un découvert abominable, se comptant en milliers d'aureus. Vous n'avez pourtant pas le souvenir d'avoir dépensé de telles sommes, vous vous en souviendriez quand même si vous aviez vidé vos comptes ! Rien à faire, les huissiers sont à vos trousses, votre orbe ne cesse de sonner, vos mails sont plein, les courriers glissés sous votre porte. Il y a forcément erreur sur la personne, vous le jurez ! (Vous perdez -1000 aureus)", chance: 10 },
+{ text: "<h10>VAMPIRISME :</h10> votre personnage ne peut se nourrir d'autre chose que de sang — [i]humain de préférence[/i]. Plus le sang est chargé de magie plus il semble alléchant. Bien frais (chaud) de préférence. Impossibilité de s'exposer au soleil au zénith, sensibilité accrue le reste de la journée.", chance: 1 },
+{ text: "<h10>scooby-gang :</h10> vous devenez un véritable radar à revenant — c'est au moins ce dont vous êtes intimement persuadé, depuis cette fameuse rencontre avec un oracle du 2ème. Si, si, il est fiable, et non, il n'était pas en état d'ébriété. Attention à ne pas crier trop fort au loup, si vous ne voulez pas attirer la colère de ceux qui tentent de se faire discret....", chance: 1 },
+{ text: "<h10>martin mystère :</h10> lorsque vous ouvrez les yeux ce matin-là, vous êtes persuadé d'être revenant. Les examens médicaux auront bon vous prouver le contraire, l'un des médecins tentant d'aborder avec vous une possible anxiété ou un stress post-traumatique (reste à savoir de quel trauma), vous n'en démordez pas. Vous avez vu la lumière au bout du tunnel et êtes revenu, c'est sûr ! ", chance: 1 },
+{ text: " <h10>Stranger Things :</h10> Vous vous réveillez dans le corps d'un autre, entouré de sa famille et des siens. Vous ne savez pas pourquoi mais vous sentez que la supercherie doit prendre, il en va de votre vie. Bienvenue dans votre nouvelle famille. (Le temps de la malédiction, vous vous greffez à la famille d'un personnage existant.)", chance: 1 },
+        { text: "<h10>SACRÉS PIAFS</h10> : sans raison particulière, vous mettez en colère tous les oiseaux des parages et ils prennent un malin plaisir à vous le faire savoir (et oui, ils visent très bien).", chance: 30 },
+        { text: "<h10>COMME UN ROC</h10> : impossibilité de nager — vous coulez comme une brique dès que vous entez dans l’eau. À votre place, on éviterait de faire trempette quelques temps..", chance: 30 },
+{ text: "<h10>BOSS MUSIC</h10> : un thème épique se lance automatiquement dès que la situation devient sérieuse (discours, déclaration, etc.), toujours au pire moment, comme si les enceintes, boules de cristal et autres appareils se liguaient contre vous. Bon courage pour garder votre street cred.", chance: 30 },
+{ text: "<h10>SAVEUR FANTÔME</h10> : vous perdez votre goût et votre odorat, tout ce que vous mâchez désormais vous semble fade et la vie a clairement perdu de sa beauté.", chance: 30 },
+{ text: "<h10>CHROMAPHOBIE</h10> : toute port de vêtements de couleur semble déclencher chez vous une réaction allergique : éternuements à répétition, nez qui coule, yeux qui pleurent, démangeaisons, etc. Vous voilà condamné au noir et blanc et à laisser renaître l'adolescent d4rk emo qui sommeille en vous.", chance: 30 },
+{ text: "<h10>ORBE CAPRICIEUSE</h10> : chaque fois que vous envoyez un message via votre boule de cristal, celle-ci modifie le destinataire sans que vous ne vous en rendiez compte alors même que vous avez déjà le doigt sur envoyer. Gare à qui recevra vos mots doux ou vos menaces.", chance: 30 },
+{ text: "<h10> TEMPÉRATURE D'ENFER</h10> : on vous a offert ce thermos en vous garantissant que les runes gravées sur le contenant permettait de maintenir n'importe quelle boisson à la température idéale durant des heures. Vous étiez enthousiaste mais la première gorgée vous a calmé : alors même que vous venez juste de le verser, votre boisson est absolument glacée. Pas moyen de garder une seule boisson chaude.", chance: 30 },
+{ text: "<h10>PLAID FARCEUR</h10> : il était pourtant si bien au premier abord : tout doux et suffisamment grand pour vous tenir au chaud. Le moins qu'on puisse dire c'est que vous ne vous attendiez pas à ce qu'il refuse votre séparation. Plus moyen de bouger, vous voilà pris en otage des heures durant jusqu'à ce qu'il daigne enfin vous libérer.", chance: 30 },
+{ text: "<h10> MEDUSA</h10> : vos cheveux se transforment en serpents miniatures, vous obligeant à porter un chapeau pour ne pas terrifier vos voisins de palier. Les bestioles sifflent, se tortillent et essayent parfois d’attraper les mouches au vol, veillez à ce qu'elles restent bien planqués sous votre couvre-chef.", chance: 30 },
+{ text: "<h10>VISIONS FOIREUSES</h10> : votre boule de cristal déraille chaque fois que vous tentez de passer un appel, vous recevez des fréquences annexes et découvrez vos voisins dans leurs petites misères du quotidien, qui se filment en train d'arroser leurs plantes en slip. Pas la peine d'essayer, vous n'êtes plus joignable et êtes condamné à observer les absurdités de votre voisinage.", chance: 30 },
+{ text: "<h10> PUMPKIN SPICE LATTE</h10> : boissons et aliments, tout devient une seule et même constante gustative : tout a goût de pumpkin spice latte. Au début, c'était fun, une lubie saisonnière dans laquelle vous trouviez une certaine satisfaction. Pourtant, quand tout a progressivement emprunté une seule et même saveur, vous avez commencé à vous lasser des relents de cannelle, muscade et citrouille.", chance: 30 },
+{ text: "<h10>ALICE IN WONDERLAND</h10> : de manière imprévisible, l'ingestion de certains aliments provoquent chez vous des changements de taille. Un soupçon de ceci et vous gagnez vingt centimètres — un soupçon de cela et vous en perdez trente. Vos vêtements ne semblent jamais adaptés, trop serrés ou trop large, chaque repas comme une angoisse anticipatoire.", chance: 30 },
+{ text: "<h10> COCOTTE, Ô MA COCOTTE</h10> : chaque décision majeure de votre vie doit être prise sur les conseils de votre cocotte en papier. Celle-la même de votre enfance, avec ses petits ronds de couleur et son infinie sagesse. (jouer choix aux dés)", chance: 30 },
+{ text: "<h10>A/B/O</h10> : soudainement doté.e d'un sens de l'odorat extrêmement développé, vous pouvez sentir odeurs et humeurs et bien plus encore — vous pouvez même sentir l'odeur spécifique digne d'une dark romance de ceux qui vous entourent. Thé au jasmin, matin d'hiver et livres de romance — c'est votre true mate, c'est certain.", chance: 30 },
+{ text: "<h10> FLOWER POWER</h10> : à votre approche, l'intégralité des fleurs se flétrissent instantanément. Cauchemar de jardiniers et fleuristes, même les plantes artificielles tirent la tronche lorsqu'elle croise votre chemin.", chance: 30 },
+{ text: "<h10> MIRROR, MIRROR... </h10> :  vous voilà obsédé par votre reflet. La moindre surface vaguement réfléchissante vous attire, comme un papillon dans la nuit : miroirs, boules de cristal, vitrines... Vous vérifiez, tout simplement. C'est au moins ce que vous prétendiez au début, avant que le temps passé à vous admirer commence à se compter en nombre d'heures. Un job à temps plein, for sure.", chance: 30 },
+{ text: "<h10> Erreur sur la personne </h10> :  Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité..", chance: 1 },
+{ text: "<h10>WHO ARE YOU ? :</h10> Le temps d'une malédiction (plus ou moins longue selon votre désir), vous oubliez l'existence de l'une des connaissances proches de votre personnage. Vos méninges auront beau tenter de trouver une explication, vous ignorez tout de cette personne qui répète avec insistance que [i]si, vous avez bien rendez-vous.[/i]", chance: 10 },
+{ text: "<h10>THE END OF US :</h10> par un coup du sort (plus ou moins longtemps selon votre désir), une relation positive dans vos connaissances devient son extrême inverse : l'inamitié remplace désormais toute entente. Fini, les barbecues du vendredi, le b[i]ingewatching[/i] de votre série préférée... le vide a remplacé sa présence, [i]et tant mieux ! [/i]", chance: 10 },
+{ text: "<h10>HOT ONES :</h10> Fan ou non du piment, la question ne se pose désormais plus pour vous. Tout aliment que vous portez à la bouche est [i]affreusement [/i]épicé, peu importe comment et par qui il est préparé. Les lasagnes de [i]nonna[/i] ? Un incendie, à crever.", chance: 10 },
+{ text: "<h10>Death becomes Them :</h10> Votre don actif le plus élevé ou votre rune principale glitch comme si vous reveniez de parmi les morts. Bonne acclimation à ces nouvelles aptitudes.", chance: 1 },
+{ text: "<h10>Corpse Bride :</h10> Un.e Revenant.e (ou une personne étrangement convaincu.e) vous prend pour saon futur.e époux.ouse perdu.e. En plus de vous poursuivre inlassablement pour que votre union se fasse enfin, iel entreprend les démarches administrative. Vous voilà cerné.e (lien à pourvoir avec un.e joueur.euse)", chance: 1 },
+{ text: "<h10>Erreur sur la personne :</h10> Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité.", chance: 1 },
+{ text: "<h10>OÙ EST TON PAPA :</h10> En ouvrant les yeux ce matin-là, tout semble normal, ou [i]presque[/i]. Malgré une légère migraine, vous avez oublié un détail infime, presque anecdotique : vous n'avez plus aucune conscience d'être une réincarnation. Pas de nature divine ? Tout va bien pour vous, massez vous un peu les tempes.", chance: 1 },
+{ text: "<h10>MY DEAREST ENEMY :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Vous pensiez que vous deviendriez les meilleurs amis du monde, mais c'était sans compter sur appétence de Panpan pour le sang frais, visiblement atteint de vampirisme (altération du familier laissé à votre convenance). Vous héritez de votre pire cauchemar, votre vie devient un enfer. Pas moyen de le donner ou de l'abandonner, il surgit toujours de derrière un buisson dès que vous tentez de vous en éloigner.", chance: 1},
+        { text: "La cible résiste. Il ne se passe rien.", chance: 20 }
+      ]
+    },
+    {
+      min: 100,
+      max: 499,
+     options: [
+ { text: "<h10>RAIPONSE :</h10> vos cheveux se mettent à pousser d'un centimètre par heure, vous vous retrouvez bientôt avec une tignasse d'une longueur improbable. C'est l'occasion de vous découvrir avec une nouvelle tête, d'investir dans de bons ciseaux ou de renouer des liens avec votre coiffeur perdu de vue. ", chance: 15 },
+        { text: "<h10>TROU NOIR :</h10> vous héritez d'un vieux sac à main, une besace, ce qui vous fait rêver, chiné dans une friperie obscure. Tout allait bien jusqu'à ce que vous vous rendiez compte que votre nouvelle acquisition engloutit littéralement tout ce que vous avez pu y ranger. Vos papiers, vos possessions les plus précieuses ? Envolés.", chance: 15 },
+{ text: "<h10>THE SOUND OF SILENCE :</h10> en fonction des évènements / de vos émotions, la musique autour de vous s'adapte, comme la bande originale de votre vie qui défile dans le background. Plus la peine de lutter et de tenter de dire que non, vous n'êtes pas une drama queen — votre bande-son est suffisamment parlante.", chance: 30 },
+{ text: "<h10>L'AVARE :</h10> du jour au lendemain, votre compte en banque affiche un découvert abominable, se comptant en milliers d'aureus. Vous n'avez pourtant pas le souvenir d'avoir dépensé de telles sommes, vous vous en souviendriez quand même si vous aviez vidé vos comptes ! Rien à faire, les huissiers sont à vos trousses, votre orbe ne cesse de sonner, vos mails sont plein, les courriers glissés sous votre porte. Il y a forcément erreur sur la personne, vous le jurez ! (Vous perdez -1000 aureus)", chance: 30 },
+{ text: "<h10>VAMPIRISME :</h10> votre personnage ne peut se nourrir d'autre chose que de sang — [i]humain de préférence[/i]. Plus le sang est chargé de magie plus il semble alléchant. Bien frais (chaud) de préférence. Impossibilité de s'exposer au soleil au zénith, sensibilité accrue le reste de la journée.", chance: 10 },
+{ text: "<h10>scooby-gang :</h10> vous devenez un véritable radar à revenant — c'est au moins ce dont vous êtes intimement persuadé, depuis cette fameuse rencontre avec un oracle du 2ème. Si, si, il est fiable, et non, il n'était pas en état d'ébriété. Attention à ne pas crier trop fort au loup, si vous ne voulez pas attirer la colère de ceux qui tentent de se faire discret....", chance: 10 },
+{ text: "<h10>martin mystère :</h10> lorsque vous ouvrez les yeux ce matin-là, vous êtes persuadé d'être revenant. Les examens médicaux auront bon vous prouver le contraire, l'un des médecins tentant d'aborder avec vous une possible anxiété ou un stress post-traumatique (reste à savoir de quel trauma), vous n'en démordez pas. Vous avez vu la lumière au bout du tunnel et êtes revenu, c'est sûr ! ", chance: 10 },
+{ text: " <h10>Stranger Things :</h10> Vous vous réveillez dans le corps d'un autre, entouré de sa famille et des siens. Vous ne savez pas pourquoi mais vous sentez que la supercherie doit prendre, il en va de votre vie. Bienvenue dans votre nouvelle famille. (Le temps de la malédiction, vous vous greffez à la famille d'un personnage existant.)", chance: 10 },
+        { text: "<h10>SACRÉS PIAFS</h10> : sans raison particulière, vous mettez en colère tous les oiseaux des parages et ils prennent un malin plaisir à vous le faire savoir (et oui, ils visent très bien).", chance: 15 },
+        { text: "<h10>COMME UN ROC</h10> : impossibilité de nager — vous coulez comme une brique dès que vous entez dans l’eau. À votre place, on éviterait de faire trempette quelques temps..", chance: 15 },
+{ text: "<h10>BOSS MUSIC</h10> : un thème épique se lance automatiquement dès que la situation devient sérieuse (discours, déclaration, etc.), toujours au pire moment, comme si les enceintes, boules de cristal et autres appareils se liguaient contre vous. Bon courage pour garder votre street cred.", chance: 15 },
+{ text: "<h10>SAVEUR FANTÔME</h10> : vous perdez votre goût et votre odorat, tout ce que vous mâchez désormais vous semble fade et la vie a clairement perdu de sa beauté.", chance: 15 },
+{ text: "<h10>CHROMAPHOBIE</h10> : toute port de vêtements de couleur semble déclencher chez vous une réaction allergique : éternuements à répétition, nez qui coule, yeux qui pleurent, démangeaisons, etc. Vous voilà condamné au noir et blanc et à laisser renaître l'adolescent d4rk emo qui sommeille en vous.", chance: 15 },
+{ text: "<h10>ORBE CAPRICIEUSE</h10> : chaque fois que vous envoyez un message via votre boule de cristal, celle-ci modifie le destinataire sans que vous ne vous en rendiez compte alors même que vous avez déjà le doigt sur envoyer. Gare à qui recevra vos mots doux ou vos menaces.", chance: 35 },
+{ text: "<h10> TEMPÉRATURE D'ENFER</h10> : on vous a offert ce thermos en vous garantissant que les runes gravées sur le contenant permettait de maintenir n'importe quelle boisson à la température idéale durant des heures. Vous étiez enthousiaste mais la première gorgée vous a calmé : alors même que vous venez juste de le verser, votre boisson est absolument glacée. Pas moyen de garder une seule boisson chaude.", chance: 15 },
+{ text: "<h10>PLAID FARCEUR</h10> : il était pourtant si bien au premier abord : tout doux et suffisamment grand pour vous tenir au chaud. Le moins qu'on puisse dire c'est que vous ne vous attendiez pas à ce qu'il refuse votre séparation. Plus moyen de bouger, vous voilà pris en otage des heures durant jusqu'à ce qu'il daigne enfin vous libérer.", chance: 15 },
+{ text: "<h10> MEDUSA</h10> : vos cheveux se transforment en serpents miniatures, vous obligeant à porter un chapeau pour ne pas terrifier vos voisins de palier. Les bestioles sifflent, se tortillent et essayent parfois d’attraper les mouches au vol, veillez à ce qu'elles restent bien planqués sous votre couvre-chef.", chance: 15 },
+{ text: "<h10>VISIONS FOIREUSES</h10> : votre boule de cristal déraille chaque fois que vous tentez de passer un appel, vous recevez des fréquences annexes et découvrez vos voisins dans leurs petites misères du quotidien, qui se filment en train d'arroser leurs plantes en slip. Pas la peine d'essayer, vous n'êtes plus joignable et êtes condamné à observer les absurdités de votre voisinage.", chance: 15 },
+{ text: "<h10> PUMPKIN SPICE LATTE</h10> : boissons et aliments, tout devient une seule et même constante gustative : tout a goût de pumpkin spice latte. Au début, c'était fun, une lubie saisonnière dans laquelle vous trouviez une certaine satisfaction. Pourtant, quand tout a progressivement emprunté une seule et même saveur, vous avez commencé à vous lasser des relents de cannelle, muscade et citrouille.", chance: 15 },
+{ text: "<h10>ALICE IN WONDERLAND</h10> : de manière imprévisible, l'ingestion de certains aliments provoquent chez vous des changements de taille. Un soupçon de ceci et vous gagnez vingt centimètres — un soupçon de cela et vous en perdez trente. Vos vêtements ne semblent jamais adaptés, trop serrés ou trop large, chaque repas comme une angoisse anticipatoire.", chance: 15 },
+{ text: "<h10> COCOTTE, Ô MA COCOTTE</h10> : chaque décision majeure de votre vie doit être prise sur les conseils de votre cocotte en papier. Celle-la même de votre enfance, avec ses petits ronds de couleur et son infinie sagesse. (jouer choix aux dés)", chance: 15 },
+{ text: "<h10>A/B/O</h10> : soudainement doté.e d'un sens de l'odorat extrêmement développé, vous pouvez sentir odeurs et humeurs et bien plus encore — vous pouvez même sentir l'odeur spécifique digne d'une dark romance de ceux qui vous entourent. Thé au jasmin, matin d'hiver et livres de romance — c'est votre true mate, c'est certain.", chance: 15 },
+{ text: "<h10> FLOWER POWER</h10> : à votre approche, l'intégralité des fleurs se flétrissent instantanément. Cauchemar de jardiniers et fleuristes, même les plantes artificielles tirent la tronche lorsqu'elle croise votre chemin.", chance: 15 },
+{ text: "<h10> MIRROR, MIRROR... </h10> :  vous voilà obsédé par votre reflet. La moindre surface vaguement réfléchissante vous attire, comme un papillon dans la nuit : miroirs, boules de cristal, vitrines... Vous vérifiez, tout simplement. C'est au moins ce que vous prétendiez au début, avant que le temps passé à vous admirer commence à se compter en nombre d'heures. Un job à temps plein, for sure.", chance: 15 },
+{ text: "<h10> Erreur sur la personne </h10> :  Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité..", chance: 10 },
+{ text: "<h10>WHO ARE YOU ? :</h10> Le temps d'une malédiction (plus ou moins longue selon votre désir), vous oubliez l'existence de l'une des connaissances proches de votre personnage. Vos méninges auront beau tenter de trouver une explication, vous ignorez tout de cette personne qui répète avec insistance que [i]si, vous avez bien rendez-vous.[/i]", chance: 30 },
+{ text: "<h10>THE END OF US :</h10> par un coup du sort (plus ou moins longtemps selon votre désir), une relation positive dans vos connaissances devient son extrême inverse : l'inamitié remplace désormais toute entente. Fini, les barbecues du vendredi, le b[i]ingewatching[/i] de votre série préférée... le vide a remplacé sa présence, [i]et tant mieux ! [/i]", chance: 30 },
+{ text: "<h10>HOT ONES :</h10> Fan ou non du piment, la question ne se pose désormais plus pour vous. Tout aliment que vous portez à la bouche est [i]affreusement [/i]épicé, peu importe comment et par qui il est préparé. Les lasagnes de [i]nonna[/i] ? Un incendie, à crever.", chance: 30 },
+{ text: "<h10>Death becomes Them :</h10> Votre don actif le plus élevé ou votre rune principale glitch comme si vous reveniez de parmi les morts. Bonne acclimation à ces nouvelles aptitudes.", chance: 10 },
+{ text: "<h10>Corpse Bride :</h10> Un.e Revenant.e (ou une personne étrangement convaincu.e) vous prend pour saon futur.e époux.ouse perdu.e. En plus de vous poursuivre inlassablement pour que votre union se fasse enfin, iel entreprend les démarches administrative. Vous voilà cerné.e (lien à pourvoir avec un.e joueur.euse)", chance: 10 },
+{ text: "<h10>Erreur sur la personne :</h10> Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité.", chance: 10 },
+{ text: "<h10>OÙ EST TON PAPA :</h10> En ouvrant les yeux ce matin-là, tout semble normal, ou [i]presque[/i]. Malgré une légère migraine, vous avez oublié un détail infime, presque anecdotique : vous n'avez plus aucune conscience d'être une réincarnation. Pas de nature divine ? Tout va bien pour vous, massez vous un peu les tempes.", chance: 10 },
+{ text: "<h10>MY DEAREST ENEMY :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Vous pensiez que vous deviendriez les meilleurs amis du monde, mais c'était sans compter sur appétence de Panpan pour le sang frais, visiblement atteint de vampirisme (altération du familier laissé à votre convenance). Vous héritez de votre pire cauchemar, votre vie devient un enfer. Pas moyen de le donner ou de l'abandonner, il surgit toujours de derrière un buisson dès que vous tentez de vous en éloigner.", chance: 10},
+        { text: "La cible résiste. Il ne se passe rien.", chance: 10 }
+      ]
+    },
+    {
+      min: 500,
+      max: Infinity,
+     options: [
+{ text: "<h10>RAIPONSE :</h10> vos cheveux se mettent à pousser d'un centimètre par heure, vous vous retrouvez bientôt avec une tignasse d'une longueur improbable. C'est l'occasion de vous découvrir avec une nouvelle tête, d'investir dans de bons ciseaux ou de renouer des liens avec votre coiffeur perdu de vue. ", chance: 10 },
+        { text: "<h10>TROU NOIR :</h10> vous héritez d'un vieux sac à main, une besace, ce qui vous fait rêver, chiné dans une friperie obscure. Tout allait bien jusqu'à ce que vous vous rendiez compte que votre nouvelle acquisition engloutit littéralement tout ce que vous avez pu y ranger. Vos papiers, vos possessions les plus précieuses ? Envolés.", chance: 10 },
+{ text: "<h10>THE SOUND OF SILENCE :</h10> en fonction des évènements / de vos émotions, la musique autour de vous s'adapte, comme la bande originale de votre vie qui défile dans le background. Plus la peine de lutter et de tenter de dire que non, vous n'êtes pas une drama queen — votre bande-son est suffisamment parlante.", chance: 20 },
+{ text: "<h10>L'AVARE :</h10> du jour au lendemain, votre compte en banque affiche un découvert abominable, se comptant en milliers d'aureus. Vous n'avez pourtant pas le souvenir d'avoir dépensé de telles sommes, vous vous en souviendriez quand même si vous aviez vidé vos comptes ! Rien à faire, les huissiers sont à vos trousses, votre orbe ne cesse de sonner, vos mails sont plein, les courriers glissés sous votre porte. Il y a forcément erreur sur la personne, vous le jurez ! (Vous perdez -1000 aureus)", chance: 20 },
+{ text: "<h10>VAMPIRISME :</h10> votre personnage ne peut se nourrir d'autre chose que de sang — [i]humain de préférence[/i]. Plus le sang est chargé de magie plus il semble alléchant. Bien frais (chaud) de préférence. Impossibilité de s'exposer au soleil au zénith, sensibilité accrue le reste de la journée.", chance: 40 },
+{ text: "<h10>scooby-gang :</h10> vous devenez un véritable radar à revenant — c'est au moins ce dont vous êtes intimement persuadé, depuis cette fameuse rencontre avec un oracle du 2ème. Si, si, il est fiable, et non, il n'était pas en état d'ébriété. Attention à ne pas crier trop fort au loup, si vous ne voulez pas attirer la colère de ceux qui tentent de se faire discret....", chance: 40 },
+{ text: "<h10>martin mystère :</h10> lorsque vous ouvrez les yeux ce matin-là, vous êtes persuadé d'être revenant. Les examens médicaux auront bon vous prouver le contraire, l'un des médecins tentant d'aborder avec vous une possible anxiété ou un stress post-traumatique (reste à savoir de quel trauma), vous n'en démordez pas. Vous avez vu la lumière au bout du tunnel et êtes revenu, c'est sûr ! ", chance: 40 },
+{ text: " <h10>Stranger Things :</h10> Vous vous réveillez dans le corps d'un autre, entouré de sa famille et des siens. Vous ne savez pas pourquoi mais vous sentez que la supercherie doit prendre, il en va de votre vie. Bienvenue dans votre nouvelle famille. (Le temps de la malédiction, vous vous greffez à la famille d'un personnage existant.)", chance: 40 },
+        { text: "<h10>SACRÉS PIAFS</h10> : sans raison particulière, vous mettez en colère tous les oiseaux des parages et ils prennent un malin plaisir à vous le faire savoir (et oui, ils visent très bien).", chance: 10 },
+        { text: "<h10>COMME UN ROC</h10> : impossibilité de nager — vous coulez comme une brique dès que vous entez dans l’eau. À votre place, on éviterait de faire trempette quelques temps..", chance: 10 },
+{ text: "<h10>BOSS MUSIC</h10> : un thème épique se lance automatiquement dès que la situation devient sérieuse (discours, déclaration, etc.), toujours au pire moment, comme si les enceintes, boules de cristal et autres appareils se liguaient contre vous. Bon courage pour garder votre street cred.", chance: 10 },
+{ text: "<h10>SAVEUR FANTÔME</h10> : vous perdez votre goût et votre odorat, tout ce que vous mâchez désormais vous semble fade et la vie a clairement perdu de sa beauté.", chance: 10 },
+{ text: "<h10>CHROMAPHOBIE</h10> : toute port de vêtements de couleur semble déclencher chez vous une réaction allergique : éternuements à répétition, nez qui coule, yeux qui pleurent, démangeaisons, etc. Vous voilà condamné au noir et blanc et à laisser renaître l'adolescent d4rk emo qui sommeille en vous.", chance: 10 },
+{ text: "<h10>ORBE CAPRICIEUSE</h10> : chaque fois que vous envoyez un message via votre boule de cristal, celle-ci modifie le destinataire sans que vous ne vous en rendiez compte alors même que vous avez déjà le doigt sur envoyer. Gare à qui recevra vos mots doux ou vos menaces.", chance: 10 },
+{ text: "<h10> TEMPÉRATURE D'ENFER</h10> : on vous a offert ce thermos en vous garantissant que les runes gravées sur le contenant permettait de maintenir n'importe quelle boisson à la température idéale durant des heures. Vous étiez enthousiaste mais la première gorgée vous a calmé : alors même que vous venez juste de le verser, votre boisson est absolument glacée. Pas moyen de garder une seule boisson chaude.", chance: 10 },
+{ text: "<h10>PLAID FARCEUR</h10> : il était pourtant si bien au premier abord : tout doux et suffisamment grand pour vous tenir au chaud. Le moins qu'on puisse dire c'est que vous ne vous attendiez pas à ce qu'il refuse votre séparation. Plus moyen de bouger, vous voilà pris en otage des heures durant jusqu'à ce qu'il daigne enfin vous libérer.", chance: 10 },
+{ text: "<h10> MEDUSA</h10> : vos cheveux se transforment en serpents miniatures, vous obligeant à porter un chapeau pour ne pas terrifier vos voisins de palier. Les bestioles sifflent, se tortillent et essayent parfois d’attraper les mouches au vol, veillez à ce qu'elles restent bien planqués sous votre couvre-chef.", chance: 10 },
+{ text: "<h10>VISIONS FOIREUSES</h10> : votre boule de cristal déraille chaque fois que vous tentez de passer un appel, vous recevez des fréquences annexes et découvrez vos voisins dans leurs petites misères du quotidien, qui se filment en train d'arroser leurs plantes en slip. Pas la peine d'essayer, vous n'êtes plus joignable et êtes condamné à observer les absurdités de votre voisinage.", chance: 10 },
+{ text: "<h10> PUMPKIN SPICE LATTE</h10> : boissons et aliments, tout devient une seule et même constante gustative : tout a goût de pumpkin spice latte. Au début, c'était fun, une lubie saisonnière dans laquelle vous trouviez une certaine satisfaction. Pourtant, quand tout a progressivement emprunté une seule et même saveur, vous avez commencé à vous lasser des relents de cannelle, muscade et citrouille.", chance: 10 },
+{ text: "<h10>ALICE IN WONDERLAND</h10> : de manière imprévisible, l'ingestion de certains aliments provoquent chez vous des changements de taille. Un soupçon de ceci et vous gagnez vingt centimètres — un soupçon de cela et vous en perdez trente. Vos vêtements ne semblent jamais adaptés, trop serrés ou trop large, chaque repas comme une angoisse anticipatoire.", chance: 10 },
+{ text: "<h10> COCOTTE, Ô MA COCOTTE</h10> : chaque décision majeure de votre vie doit être prise sur les conseils de votre cocotte en papier. Celle-la même de votre enfance, avec ses petits ronds de couleur et son infinie sagesse. (jouer choix aux dés)", chance: 10 },
+{ text: "<h10>A/B/O</h10> : soudainement doté.e d'un sens de l'odorat extrêmement développé, vous pouvez sentir odeurs et humeurs et bien plus encore — vous pouvez même sentir l'odeur spécifique digne d'une dark romance de ceux qui vous entourent. Thé au jasmin, matin d'hiver et livres de romance — c'est votre true mate, c'est certain.", chance: 10 },
+{ text: "<h10> FLOWER POWER</h10> : à votre approche, l'intégralité des fleurs se flétrissent instantanément. Cauchemar de jardiniers et fleuristes, même les plantes artificielles tirent la tronche lorsqu'elle croise votre chemin.", chance: 10 },
+{ text: "<h10> MIRROR, MIRROR... </h10> :  vous voilà obsédé par votre reflet. La moindre surface vaguement réfléchissante vous attire, comme un papillon dans la nuit : miroirs, boules de cristal, vitrines... Vous vérifiez, tout simplement. C'est au moins ce que vous prétendiez au début, avant que le temps passé à vous admirer commence à se compter en nombre d'heures. Un job à temps plein, for sure.", chance: 10 },
+{ text: "<h10> MIRROR, MIRROR... </h10> :  vous voilà obsédé par votre reflet. La moindre surface vaguement réfléchissante vous attire, comme un papillon dans la nuit : miroirs, boules de cristal, vitrines... Vous vérifiez, tout simplement. C'est au moins ce que vous prétendiez au début, avant que le temps passé à vous admirer commence à se compter en nombre d'heures. Un job à temps plein, for sure.", chance: 10 },
+{ text: "<h10>WHO ARE YOU ? :</h10> Le temps d'une malédiction (plus ou moins longue selon votre désir), vous oubliez l'existence de l'une des connaissances proches de votre personnage. Vos méninges auront beau tenter de trouver une explication, vous ignorez tout de cette personne qui répète avec insistance que [i]si, vous avez bien rendez-vous.[/i]", chance: 20 },
+{ text: "<h10>THE END OF US :</h10> par un coup du sort (plus ou moins longtemps selon votre désir), une relation positive dans vos connaissances devient son extrême inverse : l'inamitié remplace désormais toute entente. Fini, les barbecues du vendredi, le b[i]ingewatching[/i] de votre série préférée... le vide a remplacé sa présence, [i]et tant mieux ! [/i]", chance: 20 },
+{ text: "<h10> Erreur sur la personne </h10> :  Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité..", chance: 20 },
+{ text: "<h10>HOT ONES :</h10> Fan ou non du piment, la question ne se pose désormais plus pour vous. Tout aliment que vous portez à la bouche est [i]affreusement [/i]épicé, peu importe comment et par qui il est préparé. Les lasagnes de [i]nonna[/i] ? Un incendie, à crever.", chance: 20 },
+{ text: "<h10>Death becomes Them :</h10> Votre don actif le plus élevé ou votre rune principale glitch comme si vous reveniez de parmi les morts. Bonne acclimation à ces nouvelles aptitudes.", chance: 40 },
+{ text: "<h10>Corpse Bride :</h10> Un.e Revenant.e (ou une personne étrangement convaincu.e) vous prend pour saon futur.e époux.ouse perdu.e. En plus de vous poursuivre inlassablement pour que votre union se fasse enfin, iel entreprend les démarches administrative. Vous voilà cerné.e (lien à pourvoir avec un.e joueur.euse)", chance: 40 },
+{ text: "<h10>Erreur sur la personne :</h10> Vous êtes persuadé d'être la réincarnation d'une divinité (monstre, héros etc) spécifique. Peu importe que vous soyez un mortel sans pouvoir ou une réincarnation avérée. Vous seul savez la vérité.", chance: 40 },
+{ text: "<h10>OÙ EST TON PAPA :</h10> En ouvrant les yeux ce matin-là, tout semble normal, ou [i]presque[/i]. Malgré une légère migraine, vous avez oublié un détail infime, presque anecdotique : vous n'avez plus aucune conscience d'être une réincarnation. Pas de nature divine ? Tout va bien pour vous, massez vous un peu les tempes.", chance: 40 },
+{ text: "<h10>MY DEAREST ENEMY :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Vous pensiez que vous deviendriez les meilleurs amis du monde, mais c'était sans compter sur appétence de Panpan pour le sang frais, visiblement atteint de vampirisme (altération du familier laissé à votre convenance). Vous héritez de votre pire cauchemar, votre vie devient un enfer. Pas moyen de le donner ou de l'abandonner, il surgit toujours de derrière un buisson dès que vous tentez de vous en éloigner.", chance: 40},
+        { text: "La cible résiste. Il ne se passe rien.", chance: 5 }
+      ]
+    }
+  ];
+
+  const benedictionsTranches = [
+    {
+      min: 0,
+      max: 99,
+      options: [
+{ text: "<h10>la carte au trésor :</h10> vous héritez d'une boussole miniature de la part de votre ancienne voisine, celle-ci vous l'ayant mystérieusement léguée. Pas la peine d'essayer de randonner avec ou de trouver le nord, elle ne vous mènera que vers une seule destination, de la plus haute importance qui soit : le dealer des Gli Otto le plus proche. À vos risques et périls, les effets de leurs produits sont imprévisibles.", chance: 30 },
+  { text: "<h10>j'adore, dior :</h10> alors même que vous n'avez pas changé de parfum, ni même commencé à en mettre pour tout dire, vous devenez irrésistible, comme une jolie fleur au milieu des papillons. Vous ne pensiez pas que vos seules effluves pouvaient avoir un tel pouvoir, et pourtant. ", chance: 30 },
+  { text: "<h10>THE BOOK OF LIFE #1 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez un point de pouvoir gratuit.", chance: 10 },
+  { text: "<h10>CRÉSUS :</h10> lorsque vous ouvrez votre compte en banque en ligne ce matin, vous vous apercevez d'un virement d'un destinataire inconnu. Vous n'avez pas le souvenir d'avoir joué au loto, ni qu'on vous ait parlé d'une prime au boulot. La paranoïa vous guette, vous hésitez entre contacter votre banque pour parler d'une erreur de leur part ou fermer votre bouche en empochant l'argent. C'est entre vous et votre conscience. (Vous gagnez 1000 aureus) ", chance: 10 },
+  { text: "<h10>THE BOOK OF LIFE #2 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez trois points de pouvoir gratuits.", chance: 10 },
+  { text: "<h10>PROJECT HAIL MARY :</h10> vous obtenez un caillou de compagnie, baptisé selon votre fantaisie. Hormis la rune anima gravée dans la roche et ses deux yeux gravés qui semblent cligner de temps en temps, il n'est pas doté de paroles ni ne semble d'une quelconque utilité. Si certains se plaindront d'une sensation d'être épié en permanence, il reste une compagnie très appréciée des taiseux.", chance: 30 },
+  { text: "<h10>DEAR PASCAL :</h10> vous obtenez un caméléon de compagnie. Créature minuscule mais ô combien recherchée parmi les collectionneurs d'animaux magiques, il a la particularité de changer de couleur au gré de ses humeurs. Particulièrement utile pour les nuisibles, il aime gober des mouches. Les plus superstitieux continueront de croire qu'il peut donner l'écurie gagnante au colisée, à sa couleur du jour.", chance: 30 },
+  { text: "<h10>COIN COIN :</h10> une petite ribambelle de canetons vous suit partout. Tout le temps. Bizarrement résistants et immortels.", chance: 30 },
+  { text: "<h10>MY DEAREST FRIEND :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Celui-ci devient rapidement votre meilleur ami et vous accompagne dans toutes vos aventures.", chance: 10 },
+  { text: "<h10>PSHIT PSHIT, LES RAGEUX :</h10> vous obtenez une petite fiole de parfum. Bien que ses fragrances soient relativement communes, il possède un pouvoir hors norme et ça, Valérie ne s'en doutait pas quand elle l'a piqué dans votre sac pour l'essayer. Figée, la Valoche, devenue statue pendant 2h. Pas faciles, les explications qu'il a falloir lui donner.", chance: 10 },
+  { text: "<h10>INFINITY TATTOO :</h10> les tatouages sur votre peau prennent vie, comme des arabesques mouvantes. Sans véritable fonction, paraît qu'ça vous donne l'air stylé. Attention à la migraine pour celui qui vous regarderait trop longtemps. Pas tatoué ? Tant pis pour vous.", chance: 10 },
+  { text: "<h10>OÙ EST CHARLIE :</h10> sur le sol d'une ruelle, vous trouverez ce qui ressemble au premier abord à une montre à gousset, vintage à souhait. Lorsque vous en ôtez le couvercle, vous réalisez qu'il s'agit d'une boussole dont les aiguilles semblent en perpétuel mouvement, à vous guider vers votre plus ardent désir ([i]le meilleur coiffeur du quartier ou cette fameuse petite boutique dont le nom vous échappe chaque fois[/i]) via téléportation. Erreurs d'aiguillage possible, son usage répété vous amènera à vous perdre — ou à mieux découvrir les recoins obscurs du 2ème, selon le point de vue. (Périmètre d'action limité à Nuova Roma, impossible de se téléporter dans des lieux protégés par des runes de haut niveau)", chance: 10 },
+  { text: "<h10>LA CHANCE AUX AUDACIEUX :</h10> sur l'étagère branlante d'une petite boutique d'apothicaire, quelque peu lugubre et mal éclairée, vous dégottez une petite fiole portant l'inscription « [i]buvez moi[/i] ». Aventurier que vous êtes (ou inconscient absolu), vous prenez le pari de boire ledit breuvage : la ou l'une des malédictions dont vous étiez porteur disparaît instantanément. Pas de chance, il n'y avait qu'une seule gorgée.", chance: 10 },
+  { text: "<h10>LUCKY NUMBER :</h10> vous obtenez un multicompte gratuit.", chance: 10 },
+  { text: "<h10>FORT BOYARD :</h10> vous obtenez par hasard une clé. Au premier abord, elle vous apparaît tout à fait commune, rien qu'un morceau de métal sans particularité, mais si vous explorez, vous vous rendrez comptes que face à elle, même les portes protégées par des dons ou des runes de haut niveau sont faillibles. À vous ce fameux petit urbex dans les souterrains de la ville.", chance: 1 },
+  { text: "<h10>SNIP SNIP :</h10> vous obtenez des ciseaux d'iridium pur. Leur qualité est telle qu'elle en parait à peine humaine. Vous pouvez vous en servir pour retirer de manière définitive toute malédiction.", chance: 1 },
+  { text: "<h10>LE PARFUM :</h10> si vous aviez su que tata monica avait autant de parfums, voilà belle lurette que vous auriez fait un raid dans sa salle de bain. Vous deviez simplement aller arroser les plantes, mais vous n'avez pas résister à l'envie de vous pomponner avec du sent-bon. Vous n'avez pas réalisé tout de suite, mais votre aura sur les autres a changé. Vous obtenez un don de persuasion équivalent à un niveau 1.", chance: 1 },
+  { text: "<h10>TATTOO ADDICT :</h10> vous obtenez le tatouage runique de votre choix, que vous soyez runiste, mortel ou réincarnation. Son usage reste soumis aux mêmes contraintes que les tatouages classiques, attention à ne pas en abuser si vous comptez survivre encore quelques années.", chance: 1 }, 
+ { text: "<h10>Graine mystérieuse :</h10> Une graine. Est-ce que vous aller la planter ou tenter de l'ingérer ?.", chance: 10 },
+  { text: "<h10>Ecaille :</h10> Une poignée de belles écailles - des luisantes, des grandes, des sombres et des striées, d'autres, lisses comme du verre poli. Le marchand ne les vend qu'à l'unité. Effets spectaculaires garantis - voilà ce qu'il promet.", chance: 10 }, 
+ { text: "La cible résiste. Il ne se passe rien.", chance: 20 }
+]
+    },
+    {
+      min: 100,
+      max: 499,
+      options: [
+{ text: "<h10>la carte au trésor :</h10> vous héritez d'une boussole miniature de la part de votre ancienne voisine, celle-ci vous l'ayant mystérieusement léguée. Pas la peine d'essayer de randonner avec ou de trouver le nord, elle ne vous mènera que vers une seule destination, de la plus haute importance qui soit : le dealer des Gli Otto le plus proche. À vos risques et périls, les effets de leurs produits sont imprévisibles.", chance: 15 },
+  { text: "<h10>j'adore, dior :</h10> alors même que vous n'avez pas changé de parfum, ni même commencé à en mettre pour tout dire, vous devenez irrésistible, comme une jolie fleur au milieu des papillons. Vous ne pensiez pas que vos seules effluves pouvaient avoir un tel pouvoir, et pourtant. ", chance: 15 },
+  { text: "<h10>THE BOOK OF LIFE #1 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez un point de pouvoir gratuit.", chance: 30 },
+  { text: "<h10>CRÉSUS :</h10> lorsque vous ouvrez votre compte en banque en ligne ce matin, vous vous apercevez d'un virement d'un destinataire inconnu. Vous n'avez pas le souvenir d'avoir joué au loto, ni qu'on vous ait parlé d'une prime au boulot. La paranoïa vous guette, vous hésitez entre contacter votre banque pour parler d'une erreur de leur part ou fermer votre bouche en empochant l'argent. C'est entre vous et votre conscience. (Vous gagnez 1000 aureus) ", chance: 30 },
+  { text: "<h10>THE BOOK OF LIFE #2 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez trois points de pouvoir gratuits.", chance: 30 },
+  { text: "<h10>PROJECT HAIL MARY :</h10> vous obtenez un caillou de compagnie, baptisé selon votre fantaisie. Hormis la rune anima gravée dans la roche et ses deux yeux gravés qui semblent cligner de temps en temps, il n'est pas doté de paroles ni ne semble d'une quelconque utilité. Si certains se plaindront d'une sensation d'être épié en permanence, il reste une compagnie très appréciée des taiseux.", chance: 15 },
+  { text: "<h10>DEAR PASCAL :</h10> vous obtenez un caméléon de compagnie. Créature minuscule mais ô combien recherchée parmi les collectionneurs d'animaux magiques, il a la particularité de changer de couleur au gré de ses humeurs. Particulièrement utile pour les nuisibles, il aime gober des mouches. Les plus superstitieux continueront de croire qu'il peut donner l'écurie gagnante au colisée, à sa couleur du jour.", chance: 15 },
+  { text: "<h10>COIN COIN :</h10> une petite ribambelle de canetons vous suit partout. Tout le temps. Bizarrement résistants et immortels.", chance: 15 },
+  { text: "<h10>MY DEAREST FRIEND :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Celui-ci devient rapidement votre meilleur ami et vous accompagne dans toutes vos aventures.", chance: 30 },
+  { text: "<h10>PSHIT PSHIT, LES RAGEUX :</h10> vous obtenez une petite fiole de parfum. Bien que ses fragrances soient relativement communes, il possède un pouvoir hors norme et ça, Valérie ne s'en doutait pas quand elle l'a piqué dans votre sac pour l'essayer. Figée, la Valoche, devenue statue pendant 2h. Pas faciles, les explications qu'il a falloir lui donner.", chance: 30 },
+  { text: "<h10>INFINITY TATTOO :</h10> les tatouages sur votre peau prennent vie, comme des arabesques mouvantes. Sans véritable fonction, paraît qu'ça vous donne l'air stylé. Attention à la migraine pour celui qui vous regarderait trop longtemps. Pas tatoué ? Tant pis pour vous.", chance: 30 },
+  { text: "<h10>OÙ EST CHARLIE :</h10> sur le sol d'une ruelle, vous trouverez ce qui ressemble au premier abord à une montre à gousset, vintage à souhait. Lorsque vous en ôtez le couvercle, vous réalisez qu'il s'agit d'une boussole dont les aiguilles semblent en perpétuel mouvement, à vous guider vers votre plus ardent désir ([i]le meilleur coiffeur du quartier ou cette fameuse petite boutique dont le nom vous échappe chaque fois[/i]) via téléportation. Erreurs d'aiguillage possible, son usage répété vous amènera à vous perdre — ou à mieux découvrir les recoins obscurs du 2ème, selon le point de vue. (Périmètre d'action limité à Nuova Roma, impossible de se téléporter dans des lieux protégés par des runes de haut niveau)", chance: 30 },
+  { text: "<h10>LA CHANCE AUX AUDACIEUX :</h10> sur l'étagère branlante d'une petite boutique d'apothicaire, quelque peu lugubre et mal éclairée, vous dégottez une petite fiole portant l'inscription « [i]buvez moi[/i] ». Aventurier que vous êtes (ou inconscient absolu), vous prenez le pari de boire ledit breuvage : la ou l'une des malédictions dont vous étiez porteur disparaît instantanément. Pas de chance, il n'y avait qu'une seule gorgée.", chance: 30 },
+  { text: "<h10>LUCKY NUMBER :</h10> vous obtenez un multicompte gratuit.", chance: 10 },
+  { text: "<h10>FORT BOYARD :</h10> vous obtenez par hasard une clé. Au premier abord, elle vous apparaît tout à fait commune, rien qu'un morceau de métal sans particularité, mais si vous explorez, vous vous rendrez comptes que face à elle, même les portes protégées par des dons ou des runes de haut niveau sont faillibles. À vous ce fameux petit urbex dans les souterrains de la ville.", chance: 10 },
+  { text: "<h10>SNIP SNIP :</h10> vous obtenez des ciseaux d'iridium pur. Leur qualité est telle qu'elle en parait à peine humaine. Vous pouvez vous en servir pour retirer de manière définitive toute malédiction.", chance: 10 },
+  { text: "<h10>LE PARFUM :</h10> si vous aviez su que tata monica avait autant de parfums, voilà belle lurette que vous auriez fait un raid dans sa salle de bain. Vous deviez simplement aller arroser les plantes, mais vous n'avez pas résister à l'envie de vous pomponner avec du sent-bon. Vous n'avez pas réalisé tout de suite, mais votre aura sur les autres a changé. Vous obtenez un don de persuasion équivalent à un niveau 1.", chance: 10 },
+  { text: "<h10>TATTOO ADDICT :</h10> vous obtenez le tatouage runique de votre choix, que vous soyez runiste, mortel ou réincarnation. Son usage reste soumis aux mêmes contraintes que les tatouages classiques, attention à ne pas en abuser si vous comptez survivre encore quelques années.", chance: 10 }, 
+ { text: "<h10>Graine mystérieuse :</h10> Une graine. Est-ce que vous aller la planter ou tenter de l'ingérer ?.", chance: 20 },
+  { text: "<h10>Ecaille :</h10> Une poignée de belles écailles - des luisantes, des grandes, des sombres et des striées, d'autres, lisses comme du verre poli. Le marchand ne les vend qu'à l'unité. Effets spectaculaires garantis - voilà ce qu'il promet.", chance: 20 }, 
+ { text: "La cible résiste. Il ne se passe rien.", chance: 10 }
+]
+    },
+    {
+      min: 500,
+      max: Infinity,
+     options: [
+{ text: "<h10>la carte au trésor :</h10> vous héritez d'une boussole miniature de la part de votre ancienne voisine, celle-ci vous l'ayant mystérieusement léguée. Pas la peine d'essayer de randonner avec ou de trouver le nord, elle ne vous mènera que vers une seule destination, de la plus haute importance qui soit : le dealer des Gli Otto le plus proche. À vos risques et périls, les effets de leurs produits sont imprévisibles.", chance: 10 },
+  { text: "<h10>j'adore, dior :</h10> alors même que vous n'avez pas changé de parfum, ni même commencé à en mettre pour tout dire, vous devenez irrésistible, comme une jolie fleur au milieu des papillons. Vous ne pensiez pas que vos seules effluves pouvaient avoir un tel pouvoir, et pourtant. ", chance: 10 },
+  { text: "<h10>THE BOOK OF LIFE #1 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez un point de pouvoir gratuit.", chance: 20 },
+  { text: "<h10>CRÉSUS :</h10> lorsque vous ouvrez votre compte en banque en ligne ce matin, vous vous apercevez d'un virement d'un destinataire inconnu. Vous n'avez pas le souvenir d'avoir joué au loto, ni qu'on vous ait parlé d'une prime au boulot. La paranoïa vous guette, vous hésitez entre contacter votre banque pour parler d'une erreur de leur part ou fermer votre bouche en empochant l'argent. C'est entre vous et votre conscience. (Vous gagnez 1000 aureus) ", chance: 20 },
+  { text: "<h10>THE BOOK OF LIFE #2 :</h10> la découverte d'un livre aux airs de vieux grimoire à la brocante du 2ème vous permet d'être béni. Vous obtenez trois points de pouvoir gratuits.", chance: 20 },
+  { text: "<h10>PROJECT HAIL MARY :</h10> vous obtenez un caillou de compagnie, baptisé selon votre fantaisie. Hormis la rune anima gravée dans la roche et ses deux yeux gravés qui semblent cligner de temps en temps, il n'est pas doté de paroles ni ne semble d'une quelconque utilité. Si certains se plaindront d'une sensation d'être épié en permanence, il reste une compagnie très appréciée des taiseux.", chance: 10 },
+  { text: "<h10>DEAR PASCAL :</h10> vous obtenez un caméléon de compagnie. Créature minuscule mais ô combien recherchée parmi les collectionneurs d'animaux magiques, il a la particularité de changer de couleur au gré de ses humeurs. Particulièrement utile pour les nuisibles, il aime gober des mouches. Les plus superstitieux continueront de croire qu'il peut donner l'écurie gagnante au colisée, à sa couleur du jour.", chance: 10 },
+  { text: "<h10>COIN COIN :</h10> une petite ribambelle de canetons vous suit partout. Tout le temps. Bizarrement résistants et immortels.", chance: 10 },
+  { text: "<h10>MY DEAREST FRIEND :</h10> vous obtenez un familier (comme s'il était lié à vous par un tatouage anima), de l'espèce animale de votre choix et de dangerosité moyenne. Celui-ci devient rapidement votre meilleur ami et vous accompagne dans toutes vos aventures.", chance: 20 },
+  { text: "<h10>PSHIT PSHIT, LES RAGEUX :</h10> vous obtenez une petite fiole de parfum. Bien que ses fragrances soient relativement communes, il possède un pouvoir hors norme et ça, Valérie ne s'en doutait pas quand elle l'a piqué dans votre sac pour l'essayer. Figée, la Valoche, devenue statue pendant 2h. Pas faciles, les explications qu'il a falloir lui donner.", chance: 20 },
+  { text: "<h10>INFINITY TATTOO :</h10> les tatouages sur votre peau prennent vie, comme des arabesques mouvantes. Sans véritable fonction, paraît qu'ça vous donne l'air stylé. Attention à la migraine pour celui qui vous regarderait trop longtemps. Pas tatoué ? Tant pis pour vous.", chance: 20 },
+  { text: "<h10>OÙ EST CHARLIE :</h10> sur le sol d'une ruelle, vous trouverez ce qui ressemble au premier abord à une montre à gousset, vintage à souhait. Lorsque vous en ôtez le couvercle, vous réalisez qu'il s'agit d'une boussole dont les aiguilles semblent en perpétuel mouvement, à vous guider vers votre plus ardent désir ([i]le meilleur coiffeur du quartier ou cette fameuse petite boutique dont le nom vous échappe chaque fois[/i]) via téléportation. Erreurs d'aiguillage possible, son usage répété vous amènera à vous perdre — ou à mieux découvrir les recoins obscurs du 2ème, selon le point de vue. (Périmètre d'action limité à Nuova Roma, impossible de se téléporter dans des lieux protégés par des runes de haut niveau)", chance: 20 },
+  { text: "<h10>LA CHANCE AUX AUDACIEUX :</h10> sur l'étagère branlante d'une petite boutique d'apothicaire, quelque peu lugubre et mal éclairée, vous dégottez une petite fiole portant l'inscription « [i]buvez moi[/i] ». Aventurier que vous êtes (ou inconscient absolu), vous prenez le pari de boire ledit breuvage : la ou l'une des malédictions dont vous étiez porteur disparaît instantanément. Pas de chance, il n'y avait qu'une seule gorgée.", chance: 20 },
+  { text: "<h10>LUCKY NUMBER :</h10> vous obtenez un multicompte gratuit.", chance: 40 },
+  { text: "<h10>FORT BOYARD :</h10> vous obtenez par hasard une clé. Au premier abord, elle vous apparaît tout à fait commune, rien qu'un morceau de métal sans particularité, mais si vous explorez, vous vous rendrez comptes que face à elle, même les portes protégées par des dons ou des runes de haut niveau sont faillibles. À vous ce fameux petit urbex dans les souterrains de la ville.", chance: 40 },
+  { text: "<h10>SNIP SNIP :</h10> vous obtenez des ciseaux d'iridium pur. Leur qualité est telle qu'elle en parait à peine humaine. Vous pouvez vous en servir pour retirer de manière définitive toute malédiction.", chance: 40 },
+  { text: "<h10>LE PARFUM :</h10> si vous aviez su que tata monica avait autant de parfums, voilà belle lurette que vous auriez fait un raid dans sa salle de bain. Vous deviez simplement aller arroser les plantes, mais vous n'avez pas résister à l'envie de vous pomponner avec du sent-bon. Vous n'avez pas réalisé tout de suite, mais votre aura sur les autres a changé. Vous obtenez un don de persuasion équivalent à un niveau 1.", chance: 40 },
+  { text: "<h10>TATTOO ADDICT :</h10> vous obtenez le tatouage runique de votre choix, que vous soyez runiste, mortel ou réincarnation. Son usage reste soumis aux mêmes contraintes que les tatouages classiques, attention à ne pas en abuser si vous comptez survivre encore quelques années.", chance: 40 }, 
+ { text: "<h10>Graine mystérieuse :</h10> Une graine. Est-ce que vous aller la planter ou tenter de l'ingérer ?.", chance: 40 },
+  { text: "<h10>Ecaille :</h10> Une poignée de belles écailles - des luisantes, des grandes, des sombres et des striées, d'autres, lisses comme du verre poli. Le marchand ne les vend qu'à l'unité. Effets spectaculaires garantis - voilà ce qu'il promet.", chance: 40 }, 
+ { text: "La cible résiste. Il ne se passe rien.", chance: 5 }
+]
+    }
+  ];
+
+  /* =========================
+     UTILS
+  ========================= */
+
+  const seededRandom = s => {
+    let x = Math.sin(s * 9999) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  const pick = (list, seed) => {
+    const total = list.reduce((s, i) => s + i.chance, 0);
+    let r = seededRandom(seed) * total, sum = 0;
+    for (let i = 0; i < list.length; i++) {
+      sum += list[i].chance;
+      if (r <= sum) return list[i].text;
+    }
+    return list[list.length - 1].text;
+  };
+
+  const computeSeed = str => {
+    let s = 0;
+    for (let i = 0; i < str.length; i++) s += str.charCodeAt(i);
+    return s;
+  };
+
+  const getOptionsByTranche = (tranches, amount) => {
+    const tranche = tranches.find(t => amount >= t.min && amount <= t.max);
+    return tranche ? tranche.options : tranches[tranches.length - 1].options;
+  };
+
+  /* =========================
+     TEMPLATES
+  ========================= */
+
+  const TEMPLATES = {
+
+    don: (sacrifice, result) => `
+      <div class="my-don-result">
+        <h7>Sacrifice</h7> &nbsp; Don &nbsp; - &nbsp; ${sacrifice}<br>
+        <h7>Résultat</h7> &nbsp; ${result}
+      </div>
+    `,
+
+    points: (sacrifice, result) => `
+      <div class="my-points-result">
+        <h7>Sacrifice</h7> &nbsp; Points &nbsp; - &nbsp; ${sacrifice}<br>
+        <h7>Résultat</h7> &nbsp; ${result}
+      </div>
+    `,
+
+    aureus: (sacrifice, result) => `
+      <div class="my-bet-result">
+        <h7>Sacrifice</h7> &nbsp; Aureus &nbsp; - &nbsp; ${sacrifice}<br>
+        <h7>Résultat</h7> &nbsp; ${result}
+      </div>
+    `,
+
+    malediction: (aureus, target, result) => `
+      <div class="my-malediction-result">
+        <h7>Aureus sacrifiés</h7> &nbsp; ${aureus}<br>
+        <h7>Cible de la malédiction</h7> &nbsp; ${target}<br>
+        <h7>Résultat</h7> &nbsp; ${result}
+      </div>
+    `,
+
+    benediction: (aureus, target, result) => `
+      <div class="my-benediction-result">
+        <h7>Aureus sacrifiés</h7> &nbsp; ${aureus}<br>
+        <h7>Cible de la bénédiction</h7> &nbsp; ${target}<br>
+        <h7>Résultat</h7> &nbsp; ${result}
+      </div>
+    `
+
+  };
+
+  /* =========================
+     CORE
+  ========================= */
+
+  function processPost(post) {
+    try {
+
+      const content = post.querySelector(CONFIG.contentSelector);
+      if (!content) return;
+
+      let html = content.innerHTML;
+
+      if (!html.includes("[sacrifice") &&
+          !html.includes("[malediction") &&
+          !html.includes("[benediction") &&
+          !html.includes("[random_event]")) return;
+
+      const postId = parseInt(post.id.replace(/\D/g, "")) || 0;
+
+      html = html.replace(/\[\s*random_event\s*\]/gi, () => {
+        return pick(randomEvents, postId);
+      });
+
+      html = html.replace(/\[\s*sacrifice\s+aureus\s+(\d+)\s*\]/gi, (_, betStr) => {
+        const bet = +betStr.trim();
+        const rand = seededRandom(postId + 1);
+        const gain = rand < 0.4 ? bet * 2 : rand < 0.8 ? 0 : bet * 5;
+        const text = rand < 0.4 ? "Faveur divine." : rand < 0.8 ? "Perte totale." : "Miracle.";
+        return TEMPLATES.aureus(`${bet} aureus`, `${text} (+${gain})`);
+      });
+
+      html = html.replace(/\[\s*sacrifice\s+don\s*(.*?)\s*\]/gi, (_, txt) => {
+        txt = (txt || "").trim();
+        const seed = computeSeed(String(postId) + txt);
+        return TEMPLATES.don(txt || "Offrande", pick(sacrificeDonOptions, seed));
+      });
+
+      html = html.replace(/\[\s*sacrifice\s+points\s*(.*?)\s*\]/gi, (_, txt) => {
+        txt = (txt || "").trim();
+        const seed = computeSeed(String(postId) + txt);
+        return TEMPLATES.points(txt || "Points", pick(sacrificePointsOptions, seed));
+      });
+
+      html = html.replace(/\[\s*malediction\s+(.+?)\s+aureus\s+(\d+)\s*\]/gi, (_, target, amount) => {
+        target = target.trim();
+        amount = amount.trim();
+        const seed = computeSeed(String(postId) + target.toLowerCase() + amount);
+        const options = getOptionsByTranche(maledictionsTranches, +amount);
+        return TEMPLATES.malediction(amount, target, pick(options, seed));
+      });
+
+      html = html.replace(/\[\s*benediction\s+(.+?)\s+aureus\s+(\d+)\s*\]/gi, (_, target, amount) => {
+        target = target.trim();
+        amount = amount.trim();
+        const seed = computeSeed(String(postId) + target.toLowerCase() + amount);
+        const options = getOptionsByTranche(benedictionsTranches, +amount);
+        return TEMPLATES.benediction(amount, target, pick(options, seed));
+      });
+
+      content.innerHTML = html;
+
+      if (post.id === "preview") {
+        const warning = document.createElement("div");
+        warning.className = "my-preview-warning";
+        warning.innerHTML = "<i><strong>Attention résultat temporaire</strong> — Le résultat final sera mis à jour à la publication du post. Après la publication du post merci de ne pas modifier le contenu entre les parenthèses.</i>";
+        content.appendChild(warning);
+      }
+
+    } catch(e) {
+      console.error("Erreur processPost:", e);
+    }
+  }
+
+  /* =========================
+     SCAN
+  ========================= */
+
+  const scan = () => {
+    document.querySelectorAll(CONFIG.postSelector).forEach(processPost);
+  };
+
+  /* =========================
+     INIT
+  ========================= */
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", scan);
+  } else {
+    scan();
+  }
+
+})();
