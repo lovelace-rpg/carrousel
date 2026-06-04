@@ -1,0 +1,35 @@
+document.addEventListener("DOMContentLoaded", function () {
+
+
+  const carousels = document.querySelectorAll(".carousel");
+
+
+  carousels.forEach(carousel => {
+    const slides = carousel.querySelectorAll(".slide");
+    const prev = carousel.querySelector(".arrow.left");
+    const next = carousel.querySelector(".arrow.right");
+
+
+    let current = 0;
+
+
+    function showSlide(index) {
+      slides.forEach(s => s.classList.remove("active"));
+      slides[index].classList.add("active");
+    }
+
+
+    next.addEventListener("click", () => {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+    });
+
+
+    prev.addEventListener("click", () => {
+      current = (current - 1 + slides.length) % slides.length;
+      showSlide(current);
+    });
+  });
+
+
+});
