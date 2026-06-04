@@ -1,0 +1,44 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const track = document.getElementById("track");
+  const btn = document.getElementById("btn");
+
+  // Dupliquer le contenu pour un scroll infini
+  track.innerHTML += track.innerHTML;
+
+  let x = 0;
+  let speed = 0.5; // ajustez la vitesse ici
+  let playing = true;
+
+  function animate() {
+    if (playing) {
+      x -= speed;
+
+      const halfWidth = track.scrollWidth / 2;
+      if (-x >= halfWidth) {
+        x = 0;
+      }
+
+      track.style.transform = `translateX(${x}px)`;
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+
+  track.parentElement.addEventListener("mouseenter", () => {
+    playing = false;
+    btn.textContent = "▶";
+  });
+
+  track.parentElement.addEventListener("mouseleave", () => {
+    playing = true;
+    btn.textContent = "⏸";
+  });
+
+  btn.addEventListener("click", () => {
+    playing = !playing;
+    btn.textContent = playing ? "⏸" : "▶";
+  });
+});
